@@ -1,0 +1,30 @@
+{
+  "name": "chinese-chess-in-git",
+  "version": "1.0.0-beta.1",
+  "description": "中国象棋 CLI",
+  "bin": "./bin/src/main.js",
+  "files": ["bin"],
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node --inspect=9991 bin/src/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/yangxin9003/chinese-chess-in-git.git"
+  },
+  "author": "",
+  "license": "WTFPL",
+  "dependencies": {
+    "chalk": "4",
+    "command-line-draw": "^1.2.3",
+    "commander": "^9.4.0",
+    "lodash": "^4.17.21",
+    "simple-git": "^3.12.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.3",
+    "@types/lodash": "^4.14.184",
+    "@types/node": "^18.7.13",
+    "typescript": "^4.8.2"
+  }
+}
