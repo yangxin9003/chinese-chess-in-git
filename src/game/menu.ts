@@ -14,14 +14,14 @@ export default class MainMenu extends EventEmitter {
             "start",
             "load"
         ]);
-        terminal.addSprite(this.menu)
+        terminal().addSprite(this.menu)
     }
     start () {
-        terminal.clear()
+        terminal().clear()
         this.notice.render('按对应序号进行选择')
         this.menu.draw(0, 4);
     }
     close () {
-        terminal.clear()
+        terminal().clear()
     }
 }

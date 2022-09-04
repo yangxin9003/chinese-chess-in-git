@@ -1,8 +1,13 @@
 import { Terminal } from 'command-line-draw'
 
-const terminal = new Terminal({
-    height: 10,
-    border: 'double'
-})
+let terminal: Terminal
 
-export default terminal
+export default function getTerminalInstance (): Terminal {
+    if (!terminal) {
+        terminal = new Terminal({
+            height: 10,
+            border: 'double'
+        })
+    }
+    return terminal
+}

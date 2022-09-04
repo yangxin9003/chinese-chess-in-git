@@ -24,17 +24,17 @@ export default class Game extends EventEmitter{
     inputHandler: (...args: any[]) => void
     constructor (player: Player, state: typeof DefaultMapState = DefaultMapState) {
         super()
-        terminal.clear()
+        terminal().clear()
         this.player = player
         this.map = new GameMap(player === Player.black)
         this.map.init(state)
         this.renderDeathInfo()
         this.inputHandler = (_chunk: any, key: any) => this.onKeypress(key)
-        terminal.in.on('keypress', this.inputHandler)
+        terminal().in.on('keypress', this.inputHandler)
     }
     destroy () {
-        terminal.clear()
-        terminal.in.off('keypress', this.inputHandler)
+        terminal().clear()
+        terminal().in.off('keypress', this.inputHandler)
     }
     startTurn () {
         this.clearAllActions()
@@ -63,7 +63,11 @@ export default class Game extends EventEmitter{
                 } else {
                     const srcPosition = this.map.findChessPosition(this.selectedTile as Chess)
                     if (srcPosition && this.activePosition) {
-                        this.applyAction(srcPosition, this.activePosition)
+                        const isValid = this.applyAction(srcPosition, this.activePosition)
+                        if (isValid) {
+                            this.stopTurn()
+                            this.emit('push', [this.map.convertPosition(srcPosition), this.map.convertPosition(this.activePosition)])
+                        }
                     }
                 }
             } else if (key.name === 'q' || key.name === 'escape') {
@@ -123,9 +127,12 @@ export default class Game extends EventEmitter{
         this.clearActiveTile()
         this.clearSelectedTile()
     }
+    applyActionFromOtherPlayer (commonSrcPosition: Position, commontTargetPosition: Position) {
+        this.applyAction(this.map.convertPosition(commonSrcPosition), this.map.convertPosition(commontTargetPosition))
+    }
     applyAction (srcPosition: Position, targetPosition: Position) {
         if (this.isGameOver) {
-            return
+            return false
         }
         const srcTile = this.map.getTile(srcPosition) as Chess
         const targetTile = this.map.getTile(targetPosition)
@@ -140,20 +147,19 @@ export default class Game extends EventEmitter{
                 if (!masterPosition) {
                     this.isGameOver = true
                     this.renderGameOver(targetTile.player === this.player ? 'LOSE' : 'WIN')
-                    return
                 }
             }
-            this.stopTurn()
-            this.emit('applyAction', [srcPosition, targetPosition])
+            return true
         } else {
             this.notice.render('您懂不懂规矩')
         }
+        return false
     }
     getMapData (): typeof DefaultMapState {
         return JSON.parse(JSON.stringify(this.map))
     }
     renderGameOver (text: string) {
-        terminal.writeLarge(text, GameMap.right + 2, 3)
+        terminal().writeLarge(text, GameMap.right + 2, 3)
     }
     renderDeathInfo () {
         const currentRed = _.groupBy(_.flatten(this.map.data).filter(data => data instanceof Chess && data?.player === Player.red), 'surface')

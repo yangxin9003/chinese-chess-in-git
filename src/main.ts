@@ -1,14 +1,12 @@
 import path from 'path'
 import packageInfo from '../package.json'
 import _ from 'lodash'
-import { simpleGit, SimpleGit } from 'simple-git'
 import Game from './game/game'
 import MainMenu from './game/menu'
 import DefaultMapState, { Player } from './game/state'
 import { Command } from 'commander'
 import GameServer from './git-game-server'
 import { Position } from './game/map'
-import terminal from './game/terminal'
 
 type GameData = {
     mapState: typeof DefaultMapState,
@@ -20,8 +18,8 @@ type GameData = {
 const program = new Command()
 program
     .name('chinese-chess-in-git')
-    .version(packageInfo.version)
-    .description('中国象棋游戏，将在分支中提交gamedata.json文件进行游戏数据交换')
+    .version(packageInfo.version, '-v, --version', '版本信息')
+    .description('中国象棋游戏，将在分支中提交 chinese-chess-game-data.json 文件进行游戏数据交换')
     .option('-u, --username <name>', '用户名称')
     .option('-w, --workdir <path>', '本地的 git 仓库地址，用于数据交换')
     .option('-b, --branch <path>', '分支名称')
@@ -43,7 +41,6 @@ async function start () {
     if (!currentUserName) {
         throw new Error('git 未配置用户名 或 启动时添加 -u 参数')
     }
-    terminal.log(currentUserName)
     // 启动游戏菜单
     const menu = new MainMenu()
     menu.start()
@@ -51,21 +48,40 @@ async function start () {
     menu.on('start', async () => {
         menu.close()
         const game = new Game(Player.red)
-        const gameData: GameData = {
+        let gameData: GameData = {
             mapState: game.getMapData(),
             steps: [],
             creator: currentUserName,
             lastCommitor: Player.black
         }
         await gameServer.pushData(gameData, `新建游戏：\n\n${game.getMapStateCommitMessage(gameData.mapState)}`)
+        const updateGameState = (newGameData: GameData) => {
+            if (gameData.steps.length !== newGameData.steps.length) {
+                const newSteps = newGameData.steps.slice(gameData.steps.length)
+                _.forEach(newSteps, action => {
+                    game.applyActionFromOtherPlayer(...action)
+                })
+                if (newGameData.lastCommitor !== game.player) {
+                    game.startTurn()
+                }
+            } else {
+                gameServer.startPullingCommit()
+            }
+            gameData = newGameData
+        }
+        gameServer.on('update', updateGameState)
+        // 回合开始
         game.startTurn()
-        game.on('applyAction', async (action) => {
+        game.on('push', async (action) => {
             gameData.lastCommitor = game.player
             gameData.mapState = game.getMapData()
             gameData.steps.push(action)
             await gameServer.pushData(gameData, `${currentUserName}：\n\n${game.getMapStateCommitMessage(gameData.mapState)}`)
+            gameServer.startPullingCommit()
         })
         game.on('exit', () => {
+            gameServer.stopPullingCommit()
+            gameServer.off('update', updateGameState)
             game.destroy()
             menu.start()
         })
@@ -73,23 +89,42 @@ async function start () {
     // 加载游戏
     menu.on('load', async () => {
         menu.close()
-        const gameData: GameData = gameServer.getData() as GameData
+        let gameData: GameData = await gameServer.fetchData() as GameData
         if (!gameData) {
             throw new Error('无法加载游戏数据')
         }
         const game = new Game(gameData.creator === currentUserName ? Player.red : Player.black, gameData.mapState)
+        const updateGameState = (newGameData: GameData) => {
+            if (gameData.steps.length !== newGameData.steps.length) {
+                const newSteps = newGameData.steps.slice(gameData.steps.length)
+                _.forEach(newSteps, action => {
+                    game.applyActionFromOtherPlayer(...action)
+                })
+                if (newGameData.lastCommitor !== game.player) {
+                    game.startTurn()
+                }
+            } else {
+                gameServer.startPullingCommit()
+            }
+            gameData = newGameData
+        }
+        gameServer.on('update', updateGameState)
+        // 判断初始回合开始
         if (gameData.lastCommitor !== game.player) {
             game.startTurn()
         } else {
-
+            gameServer.startPullingCommit()
         }
-        game.on('applyAction', async (action: [Position, Position]) => {
+        game.on('push', async (action: [Position, Position]) => {
             gameData.lastCommitor = game.player
             gameData.mapState = game.getMapData()
             gameData.steps.push(action)
             await gameServer.pushData(gameData, `${currentUserName}：\n\n${game.getMapStateCommitMessage(gameData.mapState)}`)
+            gameServer.startPullingCommit()
         })
         game.on('exit', () => {
+            gameServer.stopPullingCommit()
+            gameServer.off('update', updateGameState)
             game.destroy()
             menu.start()
         })

@@ -16,14 +16,14 @@ export default class Notice extends Sprite {
     constructor (px: number, py: number, color: ColorString = 'white', noRepeat = false) {
         super((x, y) => {
             const text = _.padEnd(`${this.currentContent || ' '}${!noRepeat && this.repeatTime > 0 ? ` x ${this.repeatTime}` : ''}`, this.lastText.length, '#').replace(/#/g, '  ')
-            terminal.write(chalk[this.color](text), x, y)
+            terminal().write(chalk[this.color](text), x, y)
             this.lastText = text.replace(/\s*$/g, '')
             this.lastContent = this.currentContent
         })
         this.px = px
         this.py = py
         this.color = color
-        terminal.addSprite(this)
+        terminal().addSprite(this)
     }
     render (content: string = '', color: ColorString = this.color) {
         this.currentContent = content

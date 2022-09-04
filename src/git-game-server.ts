@@ -2,14 +2,17 @@ import fs from 'fs'
 import path from 'path'
 import _ from 'lodash'
 import { simpleGit, SimpleGit, GitConfigScope, CleanOptions } from 'simple-git'
+import EventEmitter from 'events'
 
-export default class GameServer {
-    git: SimpleGit
+export default class GameServer extends EventEmitter{
+    private git: SimpleGit
+    private checkTimerId: NodeJS.Timeout|number = 0
     branch: string = ''
     lastCommit: string = ''
     gameDataPathInGit = './chinese-chess-game-data.json'
     gameDataPath = ''
     constructor (workdir: string) {
+        super()
         // 初始化 git
         this.git = simpleGit(workdir)
         this.gameDataPath = path.join(workdir, this.gameDataPathInGit)
@@ -55,6 +58,10 @@ export default class GameServer {
             return null
         }
     }
+    async fetchData () {
+        await this.git.pull()
+        return this.getData()
+    }
     async pushData (data: object, commitMsg: string) {
         const content = JSON.stringify(data)
         fs.writeFileSync(this.gameDataPath, content, {encoding: 'utf-8'})
@@ -62,9 +69,27 @@ export default class GameServer {
         await this.git.commit(commitMsg)
         await this.git.push()
     }
-    async waitCommit () {
-        await this.git.fetch('origin', this.branch)
-        const status = await this.git.status()
-        console.log(status)
+    private async getLastCommitHash () {
+        const result = await this.git.log({file: this.gameDataPathInGit, maxCount: 1})
+        return result.latest?.hash
+    }
+    async startPullingCommit () {
+        const oldHash = await this.getLastCommitHash()
+        const check = () => {
+            this.checkTimerId = setTimeout(async () => {
+                await this.git.pull()
+                const newHash = await this.getLastCommitHash()
+                if (newHash !== oldHash) {
+                    const data = await this.getData()
+                    this.emit('update', data)
+                } else {
+                    check()
+                }
+            }, 3000)
+        }
+        check()
+    }
+    stopPullingCommit () {
+        clearTimeout(this.checkTimerId)
     }
 }

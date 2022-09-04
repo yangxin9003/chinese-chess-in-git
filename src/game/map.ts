@@ -23,7 +23,7 @@ export class Tile extends Sprite {
             } else {
                 text = chalk[this.color](text)
             }
-            terminal.write(text, x, y)
+            terminal().write(text, x, y)
         })
         this.surface = surface
         this.color = color
@@ -131,20 +131,20 @@ export default class GameMap {
             this.background = new Sprite((x, y) => {
                 const lineText = _.repeat('-', GameMap.right)
                 _.forEach(this.data, (row, rowIndex) => {
-                    terminal.write(lineText, 0, rowIndex)
+                    terminal().write(lineText, 0, rowIndex)
                 })
                 _.forEach(Array(GameMap.height).fill('║'), (text, rowIndex) => {
-                    terminal.write(text, GameMap.right, rowIndex)
+                    terminal().write(text, GameMap.right, rowIndex)
                 })
             })
         }
-        terminal.addSprite(this.background)
+        terminal().addSprite(this.background)
         this.background.draw(GameMap.top, GameMap.left)
     }
     renderTiles () {
         _.forEach(this.data, (row, rowIndex) => {
             _.forEach(row, (tile, colIndex) => {
-                terminal.addSprite(tile)
+                terminal().addSprite(tile)
                 tile.draw(GameMap.left + (colIndex * 3), GameMap.top + rowIndex)
             })
         })
@@ -187,7 +187,7 @@ export default class GameMap {
     setTile (position: Position, tile: Tile) {
         const [r, c] = position
         this.data[r][c] = tile
-        terminal.addSprite(tile)
+        terminal().addSprite(tile)
         tile.draw(GameMap.left + (c * 3), GameMap.top + r)
     }
     gotoPosition (chess: Chess, targetPosition: Position) {
@@ -209,5 +209,12 @@ export default class GameMap {
     isPositionInside (position: Position) {
         const [r, c] = position
         return r >= 0 && r < this.data.length && c >=0 && c < this.data[0].length
+    }
+    convertPosition (positon: Position): Position {
+        if (this.reverse) {
+            const [r, c] = positon
+            return [this.data.length - r - 1, this.data[r].length - c - 1]
+        }
+        return positon
     }
 }
