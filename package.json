@@ -1,11 +1,12 @@
 {
   "name": "chinese-chess-in-git",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0",
   "description": "中国象棋 CLI",
   "bin": "main.js",
+  "files": ["src", "bin"],
   "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node --inspect=9000 bin/src/main.js"
+    "build": "rm -rf bin && tsc",
+    "start": "npm run build && node --inspect=9000 main.js"
   },
   "repository": {
     "type": "git",
