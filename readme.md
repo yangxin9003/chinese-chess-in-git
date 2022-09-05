@@ -20,11 +20,11 @@
 * 提前准备一个双方可连接的git仓库（如：github、 gitee）
 * clone 到本地（保证双方都有提交权限）
 * 进入目录，配置用户名、切换分支（不切换也可以通过命令进行自动新建分支，配置用户名）
-* 执行 `npx chinese-chess-in-git -u <username> -w <local git repo path> -b <branch name>`
+* 执行 `npx chinese-chess-pvp -u <username> -w <local git repo path> -b <branch name>`
 
 ### 帮助文档
 ```sh
-npx chinese-chess-in-git -h
+npx chinese-chess-pvp -h
 ```
 
 ## 细节说明
