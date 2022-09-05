@@ -128,10 +128,15 @@ export default class GameMap {
     }
     renderBackground () {
         if (!this.background) {
+            const lineText = _.repeat('-', GameMap.right)
+            const riverText = _.repeat('~', GameMap.right)
             this.background = new Sprite((x, y) => {
-                const lineText = _.repeat('-', GameMap.right)
                 _.forEach(this.data, (row, rowIndex) => {
-                    terminal().write(lineText, 0, rowIndex)
+                    if (rowIndex === 4 || rowIndex === 5) {
+                        terminal().write(riverText, 0, rowIndex)
+                    } else {
+                        terminal().write(lineText, 0, rowIndex)
+                    }
                 })
                 _.forEach(Array(GameMap.height).fill('║'), (text, rowIndex) => {
                     terminal().write(text, GameMap.right, rowIndex)
