@@ -4,6 +4,10 @@ export enum Player {
     red = 1,
     black = 0
 }
+export enum PlayerColor {
+    red = 'red',
+    black = 'green'
+}
 
 export type State = {
     surface: string,

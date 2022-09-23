@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import chalk from 'chalk'
 import EventEmitter from 'events'
-import DefaultMapState, {Player, AllBlack, AllRed} from './state'
+import DefaultMapState, {Player, PlayerColor, AllBlack, AllRed} from './state'
 import GameMap, {Tile, Chess, Position} from './map'
 import terminal from './terminal'
 import Notice from './notice'
@@ -16,8 +16,8 @@ export default class Game extends EventEmitter{
     active: boolean = false
     // 提示
     stepNotice: Notice = new Notice(GameMap.right + 2, 0)
-    deathNoticeRed: Notice = new Notice(GameMap.right + 2, 1, 'red', true)
-    deathNoticeBlack: Notice = new Notice(GameMap.right + 2, 2, 'blue', true)
+    deathNoticeRed: Notice = new Notice(GameMap.right + 2, 1, PlayerColor.red, true)
+    deathNoticeBlack: Notice = new Notice(GameMap.right + 2, 2, PlayerColor.black, true)
     notice: Notice = new Notice(GameMap.right + 2, GameMap.bottom - 1, 'yellow')
     // 游戏结束标识
     isGameOver = false
@@ -266,7 +266,7 @@ export default class Game extends EventEmitter{
         return mapState.map(row =>
             row.map(tile =>
                 tile
-                    ? chalk[tile.player === Player.red ? 'red' : 'blue'](tile.surface)
+                    ? chalk[tile.player === Player.red ? PlayerColor.red : PlayerColor.black](tile.surface)
                     : '｜'
             ).join('-')
         ).join('\n')

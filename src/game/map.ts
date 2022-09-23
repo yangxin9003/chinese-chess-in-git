@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import chalk from 'chalk'
-import DefaultMapState, {Player, getPlayerMasterSurface, ColorString} from './state'
+import DefaultMapState, {Player, PlayerColor, getPlayerMasterSurface, ColorString} from './state'
 import { Sprite } from 'command-line-draw'
 import terminal from './terminal'
 
@@ -113,7 +113,7 @@ export default class GameMap {
     restoreMap (mapState: typeof DefaultMapState) {
         const map = mapState.map(
             row => row.map(
-                data => data ? new Chess(data.surface, data.player === Player.red ? 'red' : 'blue', data.player) :  new Tile()
+                data => data ? new Chess(data.surface, data.player === Player.red ? PlayerColor.red : PlayerColor.black, data.player) :  new Tile()
             )
         )
         if (this.reverse) {

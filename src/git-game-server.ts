@@ -67,7 +67,7 @@ export default class GameServer extends EventEmitter{
         fs.writeFileSync(this.gameDataPath, content, {encoding: 'utf-8'})
         await this.git.add(this.gameDataPathInGit)
         await this.git.commit(commitMsg)
-        await this.git.push()
+        await this.git.raw('push', '--set-upstream', 'origin', this.branch)
     }
     private async getLastCommitHash () {
         const result = await this.git.log({file: this.gameDataPathInGit, maxCount: 1})
